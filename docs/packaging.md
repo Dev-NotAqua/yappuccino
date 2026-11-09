@@ -78,8 +78,8 @@ repository, so `pacman -Syu` doesn't update it.
 
 ## Nightly releases
 
-Releases are built locally, but a nightly of `main` builds on GitHub: Actions,
-Nightly, Run workflow. `.github/workflows/nightly.yml` names it after the next
+Releases are built locally, but a nightly builds on GitHub: Actions, Nightly,
+Run workflow, from the branch picked there, `main` unless another is. `.github/workflows/nightly.yml` names it after the next
 minor version, the day (UTC) and the workflow's run number, such as
 `v0.2.0-nightly.20261020.5`, and titles it as the stable releases are, with the
 commit: `Yappuccino 0.2.0-nightly.20261020.5 (396abe2)`. The run number puts two
@@ -93,7 +93,10 @@ build, cargo-xwin's MSVC files and the compiled Rust dependencies
 compiles in the Nix sandbox, which can't reach one. The last job publishes the
 AppImage, its `.zsync` file, the Arch package, the Windows ZIP, the source snapshot and
 `SHA256SUMS.txt` as a prerelease on that commit. Wine doesn't start on the
-runner, so there's no installer. The release's notes list the commits since the
+runner, so there's no Inno Setup installer; the Windows job builds
+Yappuccino's own (`crates/yappuccino-setup`, below) as
+`Yappuccino-VERSION-windows-x64-setup.exe`, a step that never holds the
+release back. The release's notes list the commits since the
 previous nightly, or the latest release, each with its author's GitHub account:
 features and fixes by their Conventional Commit type, the rest folded away
 (`.github/nightly-notes.jq`). Every nightly stays on the releases page. Both

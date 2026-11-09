@@ -1,5 +1,6 @@
-# A nightly release of main, made on demand: Actions > Nightly > Run workflow.
-# It builds the Linux AppImage and the Windows ZIP as the releases are built, and publishes them as a prerelease of the next minor
+# A nightly release of the branch it runs from, made on demand: Actions >
+# Nightly > Run workflow. It builds the Linux AppImage, the Windows ZIP and
+# Yappuccino's own Windows installer as the releases are built, and publishes them as a prerelease of the next minor
 # version, such as v0.2.0-nightly.20261020.5. See docs/packaging.md.
 name: Nightly
 
@@ -21,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.ref }}
       - id: version
         run: |
           current=$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -1)
@@ -93,6 +94,18 @@ jobs:
       # Wine doesn't start on the runner (kernel32.dll, c0000135), so Inno
       # Setup can't make the installer there.
       - run: nix develop path:./nix#windows --command scripts/build-windows discord --no-installer
+      # Yappuccino's own installer (crates/yappuccino-setup), which downloads
+      # the newest release. It never holds the release back.
+      - name: Build the Rust installer
+        continue-on-error: true
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          nix develop path:./nix#windows --command bash -euo pipefail -c '
+            source scripts/release-env x86_64-pc-windows-msvc
+            cargo build --locked --release --target x86_64-pc-windows-msvc --manifest-path crates/yappuccino-setup/Cargo.toml
+            setup=$({ find target crates/yappuccino-setup/target -path "*x86_64-pc-windows-msvc/release/yappuccino-setup.exe" 2>/dev/null || true; } | head -1)
+            cp "$setup" "target/dist/discord/Yappuccino-$VERSION-windows-x64-setup.exe"'
       - uses: actions/upload-artifact@v4
         with:
           name: windows
@@ -137,7 +150,9 @@ jobs:
             previous=$(gh release view --json tagName --jq .tagName || true)
           fi
           {
-            echo "A nightly build of main at $COMMIT, for testing what's coming in the next release. Expect rough edges."
+            echo "A nightly build at $COMMIT, for testing what's coming in the next release. Expect rough edges."
+            echo
+            echo "On Windows, Yappuccino-$VERSION-windows-x64-setup.exe downloads the newest release and installs it; the ZIP runs without installing."
             echo
             if [ -n "$previous" ]; then
               echo "## Changes since $previous"
