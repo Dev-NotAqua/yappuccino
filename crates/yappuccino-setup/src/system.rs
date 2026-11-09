@@ -16,6 +16,17 @@ const APPROVED_KEY: &str =
 pub const UNINSTALLER: &str = "Uninstall Yappuccino.exe";
 const NO_WINDOW: u32 = 0x0800_0000;
 
+/// The app's program in `dir`: yappuccino.exe, or yapfast.exe in releases
+/// made before the rename.
+pub fn app_exe(dir: &Path) -> PathBuf {
+    let old = dir.join("yapfast.exe");
+    if !dir.join("yappuccino.exe").is_file() && old.is_file() {
+        old
+    } else {
+        dir.join("yappuccino.exe")
+    }
+}
+
 /// %LOCALAPPDATA%\Programs\Yappuccino, where Inno's per-user install went.
 pub fn default_dir() -> PathBuf {
     let base = std::env::var_os("LOCALAPPDATA")
@@ -127,16 +138,15 @@ fn delete_if_empty(key: &str) {
 /// Yappuccino keeps running in the tray with its window closed, so setup
 /// ends it rather than asking, as Inno's CloseApplications=force did.
 pub fn close_app() {
-    let ended = Command::new("taskkill")
-        .args(["/F", "/IM", "yappuccino.exe"])
+    // Fails when either isn't running, though it ends the other.
+    let _ = Command::new("taskkill")
+        .args(["/F", "/IM", "yappuccino.exe", "/IM", "yapfast.exe"])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .creation_flags(NO_WINDOW)
         .status();
-    if ended.is_ok_and(|status| status.success()) {
-        // Windows lets go of the files a moment after the process ends.
-        std::thread::sleep(std::time::Duration::from_millis(400));
-    }
+    // Windows lets go of the files a moment after the process ends.
+    std::thread::sleep(std::time::Duration::from_millis(400));
 }
 
 /// A PowerShell string, quoted.
@@ -200,7 +210,7 @@ pub fn shortcuts(target: Option<(&Path, bool)>) -> io::Result<()> {
 /// Registers the install: Apps & features, the yappuccino:// links and,
 /// if chosen, starting at sign-in.
 pub fn register(dir: &Path, version: &str, size_bytes: u64, autostart: bool) -> io::Result<()> {
-    let exe = dir.join("yappuccino.exe");
+    let exe = app_exe(dir);
     let exe = exe.to_string_lossy();
     let dir_text = dir.to_string_lossy();
     let uninstaller = dir.join(UNINSTALLER);
@@ -254,7 +264,7 @@ pub fn register(dir: &Path, version: &str, size_bytes: u64, autostart: bool) -> 
 /// Undoes `register`, and what the app itself wrote that uninstalling drops.
 pub fn unregister(dir: &Path) {
     // Before the files go: discord:// links open in the app that had them again.
-    let exe = dir.join("yappuccino.exe");
+    let exe = app_exe(dir);
     if exe.is_file() {
         let _ = Command::new(&exe)
             .arg("--release-discord-links")
@@ -298,7 +308,7 @@ pub fn remove_folder(dir: &Path) -> io::Result<()> {
 }
 
 pub fn launch(dir: &Path) -> io::Result<()> {
-    Command::new(dir.join("yappuccino.exe"))
+    Command::new(app_exe(dir))
         .current_dir(dir)
         .spawn()
         .map(drop)

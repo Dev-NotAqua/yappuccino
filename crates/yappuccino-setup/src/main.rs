@@ -1,10 +1,12 @@
-//! Yappuccino's Windows installer. Run as built, with an archive appended by
-//! `yappuccino-pack`, it installs; run with `--uninstall`, as the copy it
-//! leaves in the install folder is, it uninstalls. `--quiet` does either
+//! Yappuccino's Windows installer. With an archive appended by
+//! `yappuccino-pack`, it installs that; as built, with none, it downloads the
+//! newest release from GitHub and installs it. Run with `--uninstall`, as the
+//! copy it leaves in the install folder is, it uninstalls. `--quiet` does either
 //! without a window, for scripts. See docs/packaging.md.
 #![cfg_attr(not(test), windows_subsystem = "windows")]
 
 // `pack` and its helpers are yappuccino-pack's; this binary only reads.
+mod download;
 #[allow(dead_code)]
 mod pack;
 #[cfg(windows)]
@@ -72,10 +74,7 @@ fn main() {
             .unwrap_or("")
             .into(),
     );
-    if !uninstall && task.payload.is_none() {
-        window.set_stage(3);
-        window.set_detail("This setup carries no Yappuccino. Make it with yappuccino-pack, as docs/packaging.md says.".into());
-    }
+    window.set_downloads(!uninstall && task.payload.is_none());
     let task = std::cell::RefCell::new(Some(task));
     let weak = window.as_weak();
     window.on_start(move || {
@@ -150,7 +149,7 @@ impl Task {
                 .dir
                 .file_name()
                 .is_some_and(|name| name.eq_ignore_ascii_case("Yappuccino"));
-            if !named && !self.dir.join("yappuccino.exe").is_file() {
+            if !named && !system::app_exe(&self.dir).is_file() {
                 return Err(io::Error::other(format!(
                     "{} isn't a Yappuccino install folder, so nothing was removed.",
                     self.dir.display()
@@ -164,10 +163,9 @@ impl Task {
             progress(1.0, "Done");
             return Ok(());
         }
-        let payload = self
-            .payload
-            .as_ref()
-            .ok_or_else(|| io::Error::other("This setup carries no Yappuccino."))?;
+        let Some(payload) = self.payload.as_ref() else {
+            return self.download(progress);
+        };
         std::fs::create_dir_all(&self.dir)?;
         let total = payload.total.max(1) as f32;
         // Files take the bar to 90%; registering the rest.
@@ -186,7 +184,44 @@ impl Task {
             &mut uninstaller,
         )?;
         system::register(&self.dir, &payload.version, payload.total, self.autostart)?;
-        system::shortcuts(Some((&self.dir.join("yappuccino.exe"), self.desktop)))?;
+        system::shortcuts(Some((&system::app_exe(&self.dir), self.desktop)))?;
+        progress(1.0, "Done");
+        Ok(())
+    }
+
+    /// Installs the newest release from GitHub. The download takes the bar
+    /// to 80%, unpacking and copying to 92%, registering the rest.
+    fn download(&self, mut progress: impl FnMut(f32, &str)) -> std::io::Result<()> {
+        progress(0.01, "Looking for the newest Yappuccino...");
+        let release = download::find_release()?;
+        let work = std::env::temp_dir().join("yappuccino-setup");
+        std::fs::create_dir_all(&work)?;
+        let zip = work.join("yappuccino-windows-x64.zip");
+        let megabytes = release.size / 1_000_000;
+        download::fetch(&release, &zip, |share| {
+            let detail = format!(
+                "Downloading {} ({} of {megabytes} MB)...",
+                release.tag,
+                (share * megabytes as f32) as u64
+            );
+            progress(0.02 + 0.78 * share.min(1.0), &detail)
+        })?;
+        progress(0.82, "Unpacking...");
+        let unpacked = download::unpack(&zip, &work.join("unpacked"))?;
+        progress(0.88, "Copying files...");
+        let size = download::copy_tree(&unpacked, &self.dir)?;
+        if !system::app_exe(&self.dir).is_file() {
+            return Err(std::io::Error::other(
+                "The download holds no Yappuccino program.",
+            ));
+        }
+        let _ = std::fs::remove_dir_all(&work);
+        progress(0.92, "Adding it to Windows...");
+        // As built, with no archive, this program is its own uninstaller.
+        std::fs::copy(&self.exe, self.dir.join(system::UNINSTALLER))?;
+        let version = release.tag.trim_start_matches('v');
+        system::register(&self.dir, version, size, self.autostart)?;
+        system::shortcuts(Some((&system::app_exe(&self.dir), self.desktop)))?;
         progress(1.0, "Done");
         Ok(())
     }

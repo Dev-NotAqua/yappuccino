@@ -83,6 +83,8 @@ component Choice inherits Rectangle {
 
 export component SetupWindow inherits Window {
     in property <bool> uninstall;
+    /// It carries no archive, so it downloads the newest release.
+    in property <bool> downloads;
     in property <string> version;
     in property <string> install-dir;
     /// 0 asks, 1 works, 2 is done, 3 failed.
@@ -112,7 +114,7 @@ export component SetupWindow inherits Window {
                     Image { width: 96px; height: 96px; source: @image-url("../../../packaging/icon.svg"); }
                 }
                 Text { text: "Yappuccino"; color: Look.text; font-size: 24px; font-weight: 900; horizontal-alignment: center; }
-                Text { text: root.version != "" ? "Version " + root.version : ""; color: Look.muted; font-size: 13px; horizontal-alignment: center; }
+                Text { text: root.version != "" ? "Version " + root.version : root.downloads && !root.uninstall ? "Newest version" : ""; color: Look.muted; font-size: 13px; horizontal-alignment: center; }
             }
             Rectangle { x: parent.width - 1px; width: 1px; background: Look.line; }
         }
@@ -131,6 +133,7 @@ export component SetupWindow inherits Window {
                     : root.stage == 1 ? root.detail
                     : root.stage == 2 ? (root.uninstall ? "Thanks for trying it. Your Discord account isn't touched." : "Open it and sign in with your Discord account.")
                     : root.uninstall ? "It closes Yappuccino if it's running, removes it from this computer and gives discord:// links back to the app that had them."
+                    : root.downloads ? "It downloads the newest Yappuccino from GitHub and installs it for you alone, without administrator rights, into:"
                     : "Discord without the web browser. It installs for you alone, without administrator rights, into:";
             }
             if root.stage == 0 && !root.uninstall: Rectangle {
@@ -155,7 +158,7 @@ export component SetupWindow inherits Window {
             HorizontalLayout {
                 alignment: end; spacing: 10px;
                 if root.stage == 0: Action { text: "Cancel"; clicked => { root.quit(); } }
-                if root.stage == 0 && !root.uninstall: Action { text: "Install"; primary: true; clicked => { root.start(); } }
+                if root.stage == 0 && !root.uninstall: Action { text: root.downloads ? "Download and install" : "Install"; primary: true; clicked => { root.start(); } }
                 if root.stage == 0 && root.uninstall: Action { text: "Uninstall"; danger: true; clicked => { root.start(); } }
                 if root.stage == 2 && !root.uninstall: Action { text: "Close"; clicked => { root.quit(); } }
                 if root.stage == 2 && !root.uninstall: Action { text: "Open Yappuccino"; primary: true; clicked => { root.launch(); } }

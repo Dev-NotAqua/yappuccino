@@ -107,9 +107,18 @@ next nightly.
 
 `crates/yappuccino-setup` is an installer written in Rust, beside the Inno
 Setup one: a single window in the app's colours, drawn by Slint's software
-renderer, so it needs no Skia and no GPU. It is a workspace of its own, so its
-Slint features never mix with the app's. Made on Windows, from the folder of
-the portable ZIP's files:
+renderer, so it needs no Skia and no GPU, with the app's icon linked in from
+`packaging/windows/yappuccino.rc`. It is a workspace of its own, so its Slint
+features never mix with the app's.
+
+As built, `yappuccino-setup.exe` downloads: it asks GitHub for the newest
+release with a `-windows-x64.zip`, in Dev-NotAqua/yappuccino, then in
+Dev-NotAqua/yapfast, prereleases included, fetches it with Windows' own
+`curl.exe`, checks its size and the SHA-256 GitHub lists for it, unpacks it
+with Windows' `tar.exe` and installs it. A release from before the rename
+installs its `yapfast.exe` as `yappuccino.exe`, without the console launcher.
+To carry the files instead, make it on Windows from the folder of the
+portable ZIP's files:
 
 ```bash
 cargo build --release --manifest-path crates/yappuccino-setup/Cargo.toml
@@ -138,9 +147,10 @@ installs or uninstalls without the window.
 
 ## The app icon
 
-`packaging/icon.svg` is Yappuccino's icon: the logo in marigold, its dots in
-on-accent ink, so it reads on a light taskbar as well as a dark one. The UI
-keeps drawing `ui/icons/logo.svg`.
+`packaging/icon.svg` is Yappuccino's icon: a cappuccino on a marigold-to-orange
+tile, its foam a chat bubble with three dots of yap in it, so it reads on a
+light taskbar as well as a dark one, down to 16 px. The UI draws the same cup
+in one colour, `ui/icons/logo.svg`.
 
 On Linux the window's app ID is `io.github.yappuccino.Yappuccino` (`src/icon.rs`).
 Wayland desktops show a window's icon only through the desktop entry of that
