@@ -4,7 +4,7 @@
 use std::io;
 use std::os::windows::process::CommandExt;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 use windows_sys::Win32::Foundation::ERROR_SUCCESS;
 use windows_sys::Win32::System::Registry::*;
 
@@ -129,6 +129,8 @@ fn delete_if_empty(key: &str) {
 pub fn close_app() {
     let ended = Command::new("taskkill")
         .args(["/F", "/IM", "yappuccino.exe"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .creation_flags(NO_WINDOW)
         .status();
     if ended.is_ok_and(|status| status.success()) {
@@ -149,7 +151,17 @@ pub fn shortcuts(target: Option<(&Path, bool)>) -> io::Result<()> {
     let folder = |name: &str| {
         format!("(Join-Path ([Environment]::GetFolderPath('{name}')) 'Yappuccino.lnk')")
     };
-    let script = match target {
+    // A shortcut that isn't there is fine to remove. Only a real failure
+    // stops the script, and only that ends it with an error code: even a
+    // silenced error left PowerShell exiting with 1.
+    let remove = |name: &str| {
+        format!(
+            "$p={};if(Test-Path -LiteralPath $p){{Remove-Item -LiteralPath $p}};",
+            folder(name)
+        )
+    };
+    let mut script = String::from("$ErrorActionPreference='Stop';");
+    match target {
         Some((exe, desktop)) => {
             let make = |name: &str| {
                 format!(
@@ -159,23 +171,15 @@ pub fn shortcuts(target: Option<(&Path, bool)>) -> io::Result<()> {
                     quoted(&exe.parent().unwrap().to_string_lossy())
                 )
             };
-            let mut script = make("Programs");
-            if desktop {
-                script += &make("Desktop");
+            script += &make("Programs");
+            script += &if desktop {
+                make("Desktop")
             } else {
-                script += &format!(
-                    "Remove-Item -LiteralPath {} -ErrorAction SilentlyContinue;",
-                    folder("Desktop")
-                );
-            }
-            script
+                remove("Desktop")
+            };
         }
-        None => format!(
-            "Remove-Item -LiteralPath {},{} -ErrorAction SilentlyContinue",
-            folder("Programs"),
-            folder("Desktop")
-        ),
-    };
+        None => script += &(remove("Programs") + &remove("Desktop")),
+    }
     let status = Command::new("powershell")
         .args([
             "-NoProfile",
@@ -254,6 +258,8 @@ pub fn unregister(dir: &Path) {
     if exe.is_file() {
         let _ = Command::new(&exe)
             .arg("--release-discord-links")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .creation_flags(NO_WINDOW)
             .status();
     }
