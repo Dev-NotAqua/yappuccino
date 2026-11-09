@@ -61,8 +61,9 @@ discord.svg is Discord's logo from Simple Icons 16.34.0
 (https://simpleicons.org/, CC0 1.0), filled white. It marks Discord servers
 and DMs, and Discord's brand guidelines apply to it rather than the ISC licence.
 
-logo.svg is the app's own mark, the Shout balloon from the Yappuccino logo
-sketches: a comic shout balloon with typing dots cut out of it.
+logo.svg is the app's own mark, the icon's cappuccino in one colour: a cup on
+its saucer under a cloud of foam that is a chat bubble, with typing dots cut
+out of it and a line cut between the foam and the cup.
 
 scroll-up, scroll-down, scroll-left and scroll-right are the scrollbar arrows of
 Slint 1.18.1's Fluent style (https://slint.dev/), unmodified, under Slint's
