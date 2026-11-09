@@ -194,7 +194,9 @@ impl Task {
     fn download(&self, mut progress: impl FnMut(f32, &str)) -> std::io::Result<()> {
         progress(0.01, "Looking for the newest Yappuccino...");
         let release = download::find_release()?;
-        let work = std::env::temp_dir().join("yappuccino-setup");
+        // One folder per setup process: two setups at once shared one and
+        // failed on each other's download (os error 32).
+        let work = std::env::temp_dir().join(format!("yappuccino-setup-{}", std::process::id()));
         std::fs::create_dir_all(&work)?;
         let zip = work.join("yappuccino-windows-x64.zip");
         let megabytes = release.size / 1_000_000;

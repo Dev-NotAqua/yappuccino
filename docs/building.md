@@ -541,6 +541,12 @@ python scripts/prepare-windows-skia.py --print-env
 cargo build --release
 ```
 
+`build-native.ps1` does all of it from the repository's folder: it finds LLVM
+and NASM on `PATH`, in `.local\tools` (where the archives can simply be
+extracted), in Visual Studio or in their usual install folders, sets `PATH`
+and `LIBCLANG_PATH`, runs the step below and logs to
+`.local\yappuccino-build.log`.
+
 Or prepare Skia and build in one step with
 `python scripts/prepare-windows-skia.py --build`, which sets the archive URL
 and nothing else: the build that follows sees the environment the script ran
