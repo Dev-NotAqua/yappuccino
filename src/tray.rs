@@ -66,10 +66,10 @@ fn logo(size: u32, unread: bool) -> Option<slint::SharedPixelBuffer<slint::Rgba8
         .replacen(r##"fill="#fff" mask"##, r##"fill="#ffbf47" mask"##, 1);
     if unread {
         svg = svg
-            .replacen("</mask>", r#"<circle cx="74" cy="74" r="21" /></mask>"#, 1)
+            .replacen("</mask>", r#"<circle cx="79" cy="21" r="21" /></mask>"#, 1)
             .replacen(
                 "</svg>",
-                r##"<circle cx="74" cy="74" r="15" fill="#f0545e" /></svg>"##,
+                r##"<circle cx="79" cy="21" r="15" fill="#f0545e" /></svg>"##,
                 1,
             );
     }
@@ -556,8 +556,8 @@ mod tests {
         assert!(plain.as_slice().iter().any(marigold));
         assert!(!plain.as_slice().iter().any(red));
         assert!(unread.as_slice().iter().any(marigold));
-        // The dot is in the bottom-right corner.
-        let corner = (24 * 32 + 24) as usize;
+        // The dot is in the top-right corner, beside the cup's handle.
+        let corner = (7 * 32 + 25) as usize;
         assert!(red(&unread.as_slice()[corner]));
     }
 }
