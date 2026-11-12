@@ -16,6 +16,8 @@ commit; this file keeps what a person using the app would notice.
   notifications, with mentions coming through unless turned off.
 - **Privacy Shield** mod: every picture and video starts covered, as a
   spoiler, until clicked.
+- **Compact Mode** mod: less space between one author's messages and the
+  next.
 - A new logo: a cappuccino seen from above, its foam poured as a speech
   bubble, on a marigold tile. The UI draws the same cup in the theme's accent.
 - `python scripts/prepare-windows-skia.py --build` sets up the whole native

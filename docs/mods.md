@@ -41,13 +41,20 @@ clicked; clicking one uncovers that one. Stickers, custom emoji and link
 previews' pictures aren't covered. Turning it on or off redraws the
 conversation open.
 
+### Compact Mode
+
+Fits more of a conversation on screen: the space above a new author's
+messages shrinks from 16 to 4 pixels (`ClientStyle.compact` in
+`ui/yappuccino/style.slint`). Day separators and the unread line keep
+their room. It applies to every conversation at once.
+
 ## Compliance matrix
 
 | Mod | Inspiration (public) | Its licence | Clean-room | Permissions | Discord's Terms | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | Message Utilities | Discord's own message menu | proprietary | yes, behaviour only | MessageMenu, Clipboard | Copies what the client already shows; sends nothing | shipped, 1.0.0 |
 | Theme Engine | BetterDiscord themes, Vencord's themes | Apache-2.0, GPL-3.0 | yes | to come | Local look only | planned, v1 |
-| Compact Mode | Discord's compact message display | proprietary | yes | to come | Local look only | planned, v1 |
+| Compact Mode | Discord's compact message display | proprietary | yes, behaviour only | MessageLayout | Local look only | shipped, 1.0.0 (spacing; per-channel and inline names planned) |
 | Notification Tweaks | Vencord's notification plugins | GPL-3.0 | yes, behaviour only | Notifications | Local; changes only what calls for attention on this device | shipped, 1.0.0 |
 | Privacy Shield | Discord's spoilers, Vencord's privacy plugins | proprietary, GPL-3.0 | yes, behaviour only | MediaDisplay | Local covering. Not sharing typing is already Settings → Messages; "hide read receipts" becomes "don't mark read until I scroll", planned | shipped, 1.0.0 (media) |
 | Command Palette | Discord's quick switcher | proprietary | yes | to come | Navigation only | planned, v1 |

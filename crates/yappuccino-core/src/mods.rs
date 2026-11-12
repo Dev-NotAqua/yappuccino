@@ -24,6 +24,8 @@ pub enum Permission {
     Notifications,
     /// Cover pictures and videos in messages until they're clicked.
     MediaDisplay,
+    /// Change how densely messages are laid out.
+    MessageLayout,
 }
 
 impl Permission {
@@ -34,6 +36,7 @@ impl Permission {
             Self::Clipboard => "Copy text to the clipboard when you pick one",
             Self::Notifications => "Quiet message notifications on this device",
             Self::MediaDisplay => "Cover pictures and videos until you click them",
+            Self::MessageLayout => "Lay out messages more densely",
         }
     }
 }
@@ -156,6 +159,9 @@ pub const NOTIFICATION_TWEAKS: &str = "notification-tweaks";
 /// Privacy Shield: pictures and videos covered until clicked.
 pub const PRIVACY_SHIELD: &str = "privacy-shield";
 
+/// Compact Mode: less space between groups of messages.
+pub const COMPACT_MODE: &str = "compact-mode";
+
 /// Every mod Yappuccino ships, in the order Settings → Mods lists them.
 pub const CATALOG: &[Manifest] = &[
     Manifest {
@@ -220,6 +226,20 @@ pub const CATALOG: &[Manifest] = &[
         inspiration: Some(Inspiration {
             name: "Discord's spoilers and Vencord's privacy plugins",
             licence: "proprietary, GPL-3.0; behaviour only",
+        }),
+        settings: &[],
+    },
+    Manifest {
+        id: COMPACT_MODE,
+        name: "Compact Mode",
+        summary: "Fits more of a conversation on screen: one author's messages and the next author's sit closer together.",
+        version: Version::new(1, 0, 0),
+        api_version: API_VERSION,
+        min_app_version: Version::new(0, 3, 0),
+        permissions: &[Permission::MessageLayout],
+        inspiration: Some(Inspiration {
+            name: "Discord's compact message display",
+            licence: "proprietary; behaviour only",
         }),
         settings: &[],
     },

@@ -50,6 +50,7 @@ Mods lists each mod's permissions under it, in words.
 | `Clipboard` | Put text on the clipboard when the person picks one of those items |
 | `Notifications` | Keep a message's sound, desktop notification and taskbar flash on this device; never a call's ringing (`Effect::Notify` in `src/ui.rs`) |
 | `MediaDisplay` | Cover pictures and videos in messages until clicked (`pictures::covers`) |
+| `MessageLayout` | Lay out messages more densely (`ClientStyle.compact`) |
 
 New permissions come with the first mod that needs them, each with its
 check at the one place the host does that thing.
