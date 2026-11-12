@@ -1117,6 +1117,15 @@ fn mods_are_off_until_turned_on_and_act_only_while_on() {
     assert!(pictures::covering_media());
     window.invoke_mod_toggled("privacy-shield".into(), false);
     assert!(!pictures::covering_media());
+
+    // Compact Mode tightens the space between groups of messages.
+    let style = window.global::<ClientStyle>();
+    let roomy = style.get_message_group_gap();
+    window.invoke_mod_toggled("compact-mode".into(), true);
+    assert!(style.get_compact());
+    assert!(style.get_message_group_gap() < roomy);
+    window.invoke_mod_toggled("compact-mode".into(), false);
+    assert_eq!(style.get_message_group_gap(), roomy);
 }
 
 #[test]

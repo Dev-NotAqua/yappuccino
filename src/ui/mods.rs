@@ -3,7 +3,8 @@
 
 use yappuccino_core::chat::Alert;
 use yappuccino_core::mods::{
-    self, CATALOG, MESSAGE_UTILITIES, Mods, PRIVACY_SHIELD, Permission, Quiet, SettingKind,
+    self, CATALOG, COMPACT_MODE, MESSAGE_UTILITIES, Mods, PRIVACY_SHIELD, Permission, Quiet,
+    SettingKind,
 };
 
 use super::*;
@@ -143,6 +144,9 @@ pub(super) fn show(window: &YappuccinoWindow, mods: &Mods) {
     window.set_mods(ModelRc::new(VecModel::from(rows)));
     window.set_message_utilities(mods.allows(MESSAGE_UTILITIES, Permission::MessageMenu));
     pictures::set_cover_media(mods.allows(PRIVACY_SHIELD, Permission::MediaDisplay));
+    window
+        .global::<ClientStyle>()
+        .set_compact(mods.allows(COMPACT_MODE, Permission::MessageLayout));
 }
 
 /// Notification Tweaks keeps a message quiet: no sound, taskbar flash or
